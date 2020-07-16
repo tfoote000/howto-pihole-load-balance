@@ -1,0 +1,31 @@
+# This line has to stay here
+stream {
+    # These are your upstream DNS servers.
+    # We configured our PiHole servers at the following IP addresses
+    upstream dns_servers {
+        server 172.21.0.3:53;
+        server 172.21.0.4:53;
+    }
+
+    # This is the part of the Nginx sets up the reverse proxy for DNS
+    server {
+        listen 53  udp;
+        listen 53; #tcp
+
+        #limit the reverse proxy to returning 1 response
+        #after receiving a single response NGINX Plus immediately
+        #stops waiting for further responses, which frees up the
+        #memory and socket used for that session.
+        proxy_responses 1;
+        
+        #determines how long NGINX Plus waits for a response from the server
+        #If NGINX Plus receives no response within this period, it tries the
+        #next server in the upstream group and marks the unresponsive upstream
+        #server as unavailable
+        proxy_timeout   1s;
+
+        proxy_pass dns_servers;
+        # This will output the logs to our configuration volume
+        error_log  /etc/nginx/conf.d/dns.log info;
+    }
+}
